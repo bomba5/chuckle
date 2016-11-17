@@ -11,6 +11,8 @@
 #
 #Requires Nmap, Responder, SMBRelayX, Latest version of Veil, metasploit.
 trap 'kill -9 $(jobs -p)' EXIT
+pkill -9 -f Responder.py
+
 clear
 echo "_________ .__                   __   .__          "
 echo "\_   ___ \|  |__  __ __   ____ |  | _|  |   ____  "
@@ -28,6 +30,7 @@ NMAP=`which nmap`
 VEIL=/hacklabs/pentest/deps/Veil/Veil-Evasion/Veil-Evasion.py
 SMBRELAY=`which smbrelayx.py`
 MSFCONSOLE=`which msfconsole`
+NBTSCAN=`which nbtscan`
 
 # print nbt name, slow on big networks
 # valid values: 0 1
@@ -78,7 +81,7 @@ for ip in $(grep open chuckle.gnmap |cut -d " " -f 2 ); do
         lines=$(egrep -A 15 "for $ip$" chuckle.nmap |grep disabled |wc -l)
         if [[ $lines -gt 0 ]]; then
                 if [ $shownbt -gt 0 ]; then
-                        nbtname=$(/opt/udc/nbtscan $ip | awk -F" " '{print $2}' | tail -1)
+                        nbtname=$($NBTSCAN $ip | awk -F" " '{print $2}' | tail -1)
                         echo "$ip($nbtname)" >> ./chuckle.hosts
                 else
                         echo "$ip" >> ./chuckle.hosts
